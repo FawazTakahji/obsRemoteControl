@@ -4,9 +4,6 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import Base64 from "../../crypto-js/enc-base64";
-import sha256 from "../../crypto-js/sha256";
-
 /**
  * SHA256 Hashing.
  * @param  {string} [salt=''] salt.
@@ -14,8 +11,16 @@ import sha256 from "../../crypto-js/sha256";
  * @param  {string} msg Message to encode.
  * @returns {string} sha256 encoded string.
  */
-export default function (salt: string, challenge: string, msg: string): string {
-	const hash = Base64.stringify(sha256(msg + salt))!;
+export default async function (salt: string, challenge: string, msg: string): Promise<string> {
+	const hash = await sha256Hash(msg + salt);
 
-	return Base64.stringify(sha256(hash + challenge))!;
+	return await sha256Hash(hash + challenge);
+}
+
+async function sha256Hash(inputText) {
+	const utf8 = new TextEncoder().encode(inputText);
+	const hashBuffer = await crypto.subtle.digest("SHA-256", utf8);
+	const hashArray = Array.from(new Uint8Array(hashBuffer));
+	const base64Hash = btoa(String.fromCharCode(...hashArray));
+	return base64Hash;
 }
